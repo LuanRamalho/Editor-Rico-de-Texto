@@ -5,7 +5,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon, QTextCursor, QFont, QTextCharFormat, QTextListFormat
 from PyQt5.QtCore import Qt
 
-from docx import Document
+from PyQt5.QtPrintSupport import QPrinter
+
+from fpdf import FPDF
 
 class TextEditor(QMainWindow):
     def __init__(self):
@@ -127,22 +129,21 @@ class TextEditor(QMainWindow):
         cursor.insertList(list_format)
 
     def saveArchive(self):
-        """Saves the text editor content to a DOCX file."""
-
+        """Saves the text editor content to a PDF file, preserving formatting."""
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        filename, _ = QFileDialog.getSaveFileName(self, "Salvar Arquivo", "", "Documento do Word (*.docx)", options=options)
+        filename, _ = QFileDialog.getSaveFileName(self, "Salvar Arquivo", "", "Documento PDF (*.pdf)", options=options)
 
         if filename:
             try:
-                with open(filename, 'wb') as f:
-                    # **Handle DOCX format limitations:**
-                    # Due to limitations of using plain Python for saving DOCX,
-                    # we'll provide a fallback to saving as plain text (.txt).
-                    # Consider using external libraries (e.g., docx) for full DOCX support.
-                    text = self.textEdit.toPlainText()
-                    f.write(text.encode('utf-8'))  # Encode for cross-platform compatibility
-                    self.statusBar().showMessage("Arquivo salvo com sucesso!")
+                # Create a QPrinter object with PDF format
+                printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+                printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+                printer.setOutputFileName(filename)
+
+                # Print the QTextEdit content to the PDF
+                self.textEdit.document().print_(printer)
+                self.statusBar().showMessage("Arquivo salvo com sucesso!")
             except Exception as e:
                 self.statusBar().showMessage(f"Erro ao salvar arquivo: {e}")
 
